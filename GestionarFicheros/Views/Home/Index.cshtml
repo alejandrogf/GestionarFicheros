@@ -1,0 +1,55 @@
+﻿@model System.Data.Entity.DbSet<GestionarFicheros.Models.Fichero>
+
+@{
+    ViewBag.Title = "Gestión de Ficheros";
+}
+
+<h1>Gestión de Ficheros</h1>
+
+@Html.ActionLink("Guardar en servidor", "Subida", new {almacen = 1})
+@Html.ActionLink("Guardar en Base 64", "Subida", new {almacen = 2})
+@Html.ActionLink("Guardar en Binario", "Subida", new {almacen = 3})
+
+@foreach (var item in Model)
+{
+    if (item.Tipo == "interno")
+    {
+        if (item.TipoFichero == 1)
+        {
+            //Si el tipo es 1, tipo imagen, se ve la imagen
+            <img src="/ficherossubidos/@item.Datos"/>
+        }
+        else
+        {
+//Si no, se muestra el nombre como url
+            <a href="/ficherossubidos/@item.Datos">@item.Nombre</a>
+        }
+    }
+    else if (item.Tipo == "base64")
+    {
+//Como se tiene un array de bytes codificados en base 64, hay q descodificarlo
+        if (item.TipoFichero == 1)
+        {
+            //Si el tipo es 1, tipo imagen, se ve la imagen
+            <img src="data:image/jpeg;base64,@item.Datos"/>
+        }
+        else
+        {
+            @Html.ActionLink(@item.Nombre, "DownloadFile", new{id = @item.idFichero,tipo = 0}, new {target = "_blank"});
+        }
+    }
+    else if (item.Tipo == "binario")
+    {
+//Como se tiene un array de bytes codificados en base 64, hay q descodificarlo
+        if (item.TipoFichero == 1)
+        {
+            //Si el tipo es 1, tipo imagen, se ve la imagen
+            <img src="data:image/jpeg;base64,@Convert.ToBase64String(item.DatosBinarios)"/>
+        }
+        else
+        {
+//Si no, se muestra el nombre como url para descargar
+            @Html.ActionLink(@item.Nombre, "DownloadFile", new {id = @item.idFichero, tipo = 1}, new {target = "_blank"})
+        }
+    }
+}
