@@ -5,14 +5,15 @@
 }
 
 <h1>Gestión de Ficheros</h1>
-
-@Html.ActionLink("Guardar en servidor", "Subida", new {almacen = 1})
-@Html.ActionLink("Guardar en Base 64", "Subida", new {almacen = 2})
-@Html.ActionLink("Guardar en Binario", "Subida", new {almacen = 3})
-@Html.ActionLink("Guardar en Azure", "Subida", new { almacen = 4 })
-
+<br />
+@Html.ActionLink("Guardar en servidor", "Subida", new { almacen = 1 }, new { @class = "btn btn-success" })<br/><br />
+@Html.ActionLink("Guardar en Base 64" , "Subida", new { almacen = 2 }, new { @class = "btn btn-primary" })<br /><br />
+@Html.ActionLink("Guardar en Binario" , "Subida", new { almacen = 3 }, new { @class = "btn btn-info" })<br /><br />
+@Html.ActionLink("Guardar en Azure"   , "Subida", new { almacen = 4 }, new { @class = "btn btn-warning" })<br /><br />
+<br /><br />
 @foreach (var item in Model)
 {
+
     if (item.Tipo == "interno")
     {
         if (item.TipoFichero == 1)
