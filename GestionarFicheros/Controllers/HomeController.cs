@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Mime;
 using System.Web;
@@ -11,7 +12,6 @@ namespace GestionarFicheros.Controllers
 {
     public class HomeController : Controller
     {
-
         //Para crear un desplegable:
         //1.- Se crea una clase en Models, sobre los campos que se quiere hacer la lista
         //2.-Este código, creando la lista
@@ -51,49 +51,77 @@ namespace GestionarFicheros.Controllers
                 tipoAlmacen = "base64";
             if (almacen == 3)
                 tipoAlmacen = "binario";
-
-
+            if (almacen == 4)
+                tipoAlmacen = "azure";
 
             ViewBag.almacen = tipoAlmacen;
             ViewBag.TipoFichero = new SelectList(tipos, "id", "nombre");
             return View(new Fichero());
         }
 
+        public ActionResult GetBase64Azure(String nombre)
+        {
+            var cuentaAz = ConfigurationManager.AppSettings["cuentaAzureStorage"];
+            var claveAz = ConfigurationManager.AppSettings["claveAzureStorage"];
+            var contAz = ConfigurationManager.AppSettings["contenedorAzureStorage"];
+
+            var storage = new AzureStorage(cuentaAz, claveAz, contAz);
+            var data = storage.RecuperarFicheroContenedor(nombre, contAz);
+            var f = new FicheroBase64() { Contenido = Convert.ToBase64String(data) };
+            return View(f);
+        }
+
+
         public FileResult DownloadFile(int id, int tipo = 0)
         {
-            byte[] fichero;
+            byte[] fichero = new byte[] { };
             var f = db.Fichero.Find(id);
             if (tipo == 0)
             {
                 fichero = Convert.FromBase64String(f.Datos);
             }
-            else
+            else if (tipo==1)
             {
                 fichero = f.DatosBinarios;
             }
+            else if (tipo==2)
+            {
+                var cu = ConfigurationManager.AppSettings["cuentaAzureStorage"];
+                var cl = ConfigurationManager.AppSettings["claveAzureStorage"];
+                var co = ConfigurationManager.AppSettings["contenedorAzureStorage"];
 
+                var sto = new AzureStorage(cu, cl, co);
 
+                fichero = sto.RecuperarFicheroContenedor(f.Datos, co);
+            }
             return File(fichero, MediaTypeNames.Application.Octet, f.Nombre);
         }
-
+        
 
         public FileResult DownloadFileB64(int id, int tipo = 0)
         {
-            byte[] fichero;
+            byte[] fichero = new byte[] {};
             var busqueda = db.Fichero.Find(id);
             if (tipo == 0)
             {
                 fichero = Convert.FromBase64String(busqueda.Datos);
             }
-            else
+            else if(tipo==1)
             {
-                fichero = db.Fichero.Find(id).DatosBinarios;
+                fichero = busqueda.DatosBinarios;
             }
+            else if (tipo==2)
+            {
+                var cuentaAz = ConfigurationManager.AppSettings["cuentaAzureStorage"];
+                var claveAz = ConfigurationManager.AppSettings["claveAzureStorage"];
+                var contAz = ConfigurationManager.AppSettings["contenedorAzureStorage"];
 
+                var azure = new AzureStorage(cuentaAz, claveAz, contAz);
 
+                fichero = azure.RecuperarFicheroContenedor(busqueda.Datos, contAz);
+            }
             return File(fichero, MediaTypeNames.Application.Octet, busqueda.Nombre);
         }
-
 
         [HttpPost]
         //HttpPostedFileBase: Envia información del fichero 
@@ -152,6 +180,32 @@ namespace GestionarFicheros.Controllers
                     {
                         Console.WriteLine(e);
                     }
+                }
+            }
+            else if (model.Tipo == "azure")
+            {
+                var cuentaAz = ConfigurationManager.AppSettings["cuentaAzureStorage"];
+                var claveAz = ConfigurationManager.AppSettings["claveAzureStorage"];
+                var contAz = ConfigurationManager.AppSettings["contenedorAzureStorage"];
+
+                var azure=new AzureStorage(cuentaAz,claveAz,contAz);
+
+                var guid = Guid.NewGuid();
+                var extension = fichero.FileName.Substring(fichero.FileName.LastIndexOf("."));
+
+                azure.SubirFichero(fichero.InputStream,guid+extension);
+
+                model.Datos = guid + extension;
+                model.Nombre = fichero.FileName;
+
+                db.Fichero.Add(model);
+                try
+                {
+                    db.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
                 }
             }
             return RedirectToAction("Index");

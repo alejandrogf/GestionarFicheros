@@ -9,6 +9,7 @@
 @Html.ActionLink("Guardar en servidor", "Subida", new {almacen = 1})
 @Html.ActionLink("Guardar en Base 64", "Subida", new {almacen = 2})
 @Html.ActionLink("Guardar en Binario", "Subida", new {almacen = 3})
+@Html.ActionLink("Guardar en Azure", "Subida", new { almacen = 4 })
 
 @foreach (var item in Model)
 {
@@ -50,6 +51,22 @@
         {
 //Si no, se muestra el nombre como url para descargar
             @Html.ActionLink(@item.Nombre, "DownloadFile", new {id = @item.idFichero, tipo = 1}, new {target = "_blank"})
+        }
+    }
+    else if (item.Tipo == "azure")
+    {
+        //Como se tiene un array de bytes codificados en base 64, hay q descodificarlo
+        if (item.TipoFichero == 1)
+        {
+            //Si el tipo es 1, tipo imagen, se ve la imagen
+            @Html.Action("GetBase64Azure",new {nombre=item.Datos})
+            //html.action es como un partial, pero este no pasa por el controlador, mientras que el action llama
+            //directamente a un metodo del controlador
+        }
+        else
+        {
+            //Si no, se muestra el nombre como url para descargar
+            @Html.ActionLink(@item.Nombre, "DownloadFile", new { id = @item.idFichero, tipo = 2 }, new { target = "_blank" })
         }
     }
 }

@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace GestionarFicheros.Models
 {
-    public class TipoFichero
+    public class FicheroBase64
     {
-        public int id { get; set; }
-        public String nombre { get; set; }
+        public String Contenido { get; set; }
     }
 }
